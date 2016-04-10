@@ -35,7 +35,8 @@ Example:
         box-sizing: border-box;
       }
 
-      div {
+      div#wpCarousel {
+        position: relative;
         overflow: hidden;
       }
 
@@ -47,24 +48,75 @@ Example:
         white-space:nowrap;
         overflow-x: auto;
         font-size: 0;
+        background: #333;
+      }
+
+      :host[transition-on] ul#carousel {
         transition: transform 0.2s;
       }
 
       li {
+        float: left;
+        position: relative;
         height: 400px;
         width: 100%;
         display: inline-block;
         text-align: center;
         font-size: 0;
+        overflow: hidden;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      li:before {
+        content: "";
+        margin-left: -1px;
+        width: 1px;
+        height: 100%;
+        display: inline-block;
+        vertical-align: middle;
+        opacity: 0;
       }
 
       img {
-        max-height: 400px;
+        max-width: 100%;
+        max-height: 100%;
         display: inline-block;
+        pointer-events: none;
+        vertical-align: middle;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #buttonPrev,
+      #buttonNext {
+        position: absolute;
+        top: 50%;
+        width: 40px;
+        height: 40px;
+        margin-top: -20px;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        border: 0;
+        text-align: center;
+      }
+
+      #buttonPrev {
+        left: 10px;
+      }
+      #buttonNext {
+        right: 10px;
+      }
+
+      #buttonPrev[disabled],
+      #buttonNext[disabled] {
+        opacity: 0.4;
       }
     </style>
-    <div id="wpCarousel">
-      <ul id="carousel">
+    <div id="wpCarousel" class$="first-item-{{firstItem}} first-item-{{lastItem}}">
+      <ul id="carousel" on-track="_handleTrack" style="width: {{widthCarousel}}%">
         <template
             id="images"
             is="dom-repeat"
@@ -75,9 +127,19 @@ Example:
           </li>
         </template>
       </ul>
+      <button
+          id="buttonPrev"
+          on-tap="prev"
+          disabled="{{firstItem}}">
+        Prev
+      </button>
+      <button
+          id="buttonNext"
+          on-tap="next"
+          disabled="{{lastItem}}">
+        Next
+      </button>
     </div>
-    <button on-tap="prev">Prev</button>
-    <button on-tap="next">Next</button>
   </template>
 
   <script>
@@ -85,10 +147,6 @@ Example:
       is: 'pr-gallery',
 
       properties: {
-        /**
-         * `fancy` indicates that the element should don a monocle and tophat,
-         * while checking its pocket watch.
-         */
         images: {
           type: Array
         },
@@ -105,22 +163,52 @@ Example:
         },
         widthCarousel: {
           type: Number
+        },
+        transitionOn: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true
+        },
+        firstItem: {
+          type: Boolean,
+          value: false
+        },
+        lastItem: {
+          type: Boolean,
+          value: false
         }
       },
 
-      // Element Lifecycle
-      observers: [
-        '_changeImagesArray(images.splices)'
-      ],
+      _percentajeDisplacement: 0,
 
-      _changeImagesArray: function() {
-        console.log('changed arrray');
-        console.log(this.images);
+      _handleTrack: function(e) {
+        switch(e.detail.state) {
+          case 'track':
+            var displacement = e.detail.dx;
+            var actualPosition = this.width*this.index;
+            var diff = actualPosition-displacement;
+            _percentageDisplacement = displacement*100/this.width;
+
+            if (this.index < this.images.length-1) {
+              this._changeItems(diff, false);
+            }
+            break;
+          case 'end':
+            if (_percentageDisplacement < -15
+                && this.index < this.images.length-1) {
+              this.next();
+            } else if (_percentageDisplacement > 15 && this.index > 0) {
+              this.prev();
+            } else {
+              this._changeItems(this.width*this.index);
+            }
+            break;
+        }
       },
 
       next: function() {
         if (this.index >= this.images.length-1) {
-          this.index = 0;
+          this.index = this.images.length-1;
           return;
         }
 
@@ -140,7 +228,11 @@ Example:
         this._changeItems(prevPoint);
       },
 
-      _changeItems: function(goTo) {
+      _changeItems: function(goTo, transitionOn) {
+        this.firstItem = (this.index <= 0) ? true : false;
+        this.lastItem = (this.index === this.images.length-1) ? true : false;
+
+        this.transitionOn = (transitionOn === false) ? false : true;
         this.translate3d('-'+goTo+'px', '0', '0', this.$.carousel);
       },
 
@@ -148,74 +240,21 @@ Example:
         if (this.index === 0) {
           this.push('imagesActive', this.images[this.index]);
           this.push('imagesActive', this.images[this.index+1]);
-        } else {
+        } else if (this.images.length > this.imagesActive.length &&
+            this.index === this.imagesActive.length-1) {
+          this.widthCarousel = (this.index+2)*100;
           this.push('imagesActive', this.images[this.index+1]);
         }
-
       },
 
       ready: function() {
-
+        this.firstItem = (this.index <= 0) ? true : false;
+        this.lastItem = (this.index === this.images.length-1) ? true : false;
         this._setImagesActive();
-        var images = this.$.images.addEventListener('dom-change', function() {
-          console.log('changed');
-        })
-
-        //this.imageActive = this.images[this.index];
-        // `ready` is called after all elements have been configured, but
-        // propagates bottom-up. This element's children are ready, but parents
-        // are not.
-        //
-        // This is the point where you should make modifications to the DOM (when
-        // necessary), or kick off any processes the element wants to perform.
       },
 
       attached: function() {
-
         this.width = this.$.wpCarousel.offsetWidth;
-        // `attached` fires once the element and its parents have been inserted
-        // into a document.
-        //
-        // This is a good place to perform any work related to your element's
-        // visual state or active behavior (measuring sizes, beginning animations,
-        // loading resources, etc).
-      },
-
-      detached: function() {
-        // The analog to `attached`, `detached` fires when the element has been
-        // removed from a document.
-        //
-        // Use this to clean up anything you did in `attached`.
-      },
-
-      // Element Behavior
-
-      /**
-       * Sometimes it's just nice to say hi.
-       *
-       * @param {string} greeting A positive greeting.
-       * @return {string} The full greeting.
-       */
-      addImages: function(newImages) {
-        this.images = this.images.concat(newImages);
-        this.notifyPath('images', this.images)
-      },
-
-      /**
-       * The `pr-gallery-lasers` event is fired whenever `fireLasers` is called.
-       *
-       * @event pr-gallery-lasers
-       * @detail {{sound: String}}
-       */
-
-      /**
-       * Attempt to destroy this element's enemies with a beam of light!
-       *
-       * Or, at least, dispatch an event in the vain hope that someone else will
-       * do the zapping.
-       */
-      fireLasers: function() {
-        this.fire('pr-gallery-lasers', {sound: 'Pew pew!'});
       }
     });
   </script>

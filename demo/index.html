@@ -19,9 +19,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <body unresolved>
 
     <template id="app" is="dom-bind">
-      <template is="dom-repeat" items="{{images}}">
-        <div>{{item.src}}</div>
-      </template>
       <pr-gallery id="gallery" images="{{images}}">
       </pr-gallery>
     </template>
