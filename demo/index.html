@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>pr-gallery Demo</title>
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="../pr-gallery.html">
+  </head>
+  <body unresolved>
+
+    <template id="app" is="dom-bind">
+      <template is="dom-repeat" items="{{images}}">
+        <div>{{item.src}}</div>
+      </template>
+      <pr-gallery id="gallery" images="{{images}}">
+      </pr-gallery>
+    </template>
+
+
+    <script>
+
+    var app = document.querySelector('#app');
+    app.images = [
+      {src: '../messi.jpg'},
+      {src: '../messi2.jpg'},
+      {src: '../messi3.jpg'},
+      {src: '../messi4.jpg'},
+      {src: '../messi5.jpg'},
+    ];
+
+    // The dom-change event signifies when the template has stamped its DOM.
+    app.addEventListener('dom-change', function() {
+      console.log('Comenzar');
+      /*setTimeout(function() {
+        app.push('images', {src: '../messi4.jpg'})
+      }, 4000);*/
+    });
+
+    // auto-binding template is ready.
+
+    /*app.gallery.addImages([
+      {src: '../messi4.jpg'}, {src: '../messi5.jpg'}
+    ]);*/
+
+    </script>
+
+  </body>
+</html>
