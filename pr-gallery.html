@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../pr-gallery-button/pr-gallery-button.html">
 
 <!--
 An element providing a solution to no problem in particular.
@@ -94,13 +95,7 @@ Example:
       #buttonNext {
         position: absolute;
         top: 50%;
-        width: 40px;
-        height: 40px;
         margin-top: -20px;
-        background: rgba(0,0,0,0.5);
-        color: #fff;
-        border: 0;
-        text-align: center;
       }
 
       #buttonPrev {
@@ -108,11 +103,6 @@ Example:
       }
       #buttonNext {
         right: 10px;
-      }
-
-      #buttonPrev[disabled],
-      #buttonNext[disabled] {
-        opacity: 0.4;
       }
     </style>
     <div id="wpCarousel" class$="first-item-{{firstItem}} first-item-{{lastItem}}">
@@ -127,18 +117,18 @@ Example:
           </li>
         </template>
       </ul>
-      <button
+      <pr-gallery-button
           id="buttonPrev"
           on-tap="prev"
           disabled="{{firstItem}}">
         Prev
-      </button>
-      <button
+      </pr-gallery-button>
+      <pr-gallery-button
           id="buttonNext"
           on-tap="next"
           disabled="{{lastItem}}">
         Next
-      </button>
+      </pr-gallery-button>
     </div>
   </template>
 
@@ -220,8 +210,7 @@ Example:
           this.push('imagesActive', this.images[this.index+1]);
         } else if (this._thereAreImagesNotActives() &&
             this._isTheLastPosition()) {
-          //the carrousel shoul be ever higer for each image.
-          //With any image the with should be 100% higer
+          //With each image the with should be 100% higher
           //The increment of 2 (this.index+2) is because the gallety start with
           //two images actives
           this.widthCarousel = (this.index+2)*100;
