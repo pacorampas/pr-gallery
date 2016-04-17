@@ -19,7 +19,8 @@
   ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.2.0",
-    "pr-gallery-button": "pacorampas/pr-gallery-button#^0.0.2"
+    "pr-gallery-button": "pacorampas/pr-gallery-button#^0.0.2",
+    "pr-thumbnail-list": "https://github.com/pacorampas/pr-thumbnail-list.git#master"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",

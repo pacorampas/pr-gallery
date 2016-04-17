@@ -138,7 +138,8 @@ Example:
 
       properties: {
         images: {
-          type: Array
+          type: Array,
+          value: []
         },
         imagesActive: {
           type: Array,
@@ -146,7 +147,10 @@ Example:
         },
         index: {
           type: Number,
-          value: 0
+          value: 0,
+          notify: true,
+          reflectToAttribute: true,
+          observer: '_indexChangedObserver'
         },
         width: {
           type: Number
@@ -174,54 +178,75 @@ Example:
       ready: function() {
         this.firstItem = this._isFirstImage();
         this.lastItem = this._isLastImage();
-        this._setImagesActive();
       },
 
       attached: function() {
         this.width = this.$.wpCarousel.offsetWidth;
-      },
-
-      next: function() {
-        if (this._isLastImage()) {
-          this.index = this.images.length-1;
-          return;
-        }
-
-        this.index++;
-        this._setImagesActive();
-        var nextPoint = this.width*this.index;
-        this._changeItems(nextPoint);
+        this._init();
       },
 
       prev: function() {
         if (this._isFirstImage()) {
-          this.index = 0;
+          return;
+        }
+        this.index--;
+      },
+
+      next: function() {
+        if (this._isLastImage()) {
+          return;
+        }
+        this.index++;
+      },
+
+      _init: function() {
+        if (this._isFirstImage()) {
+          this.push('imagesActive', this.images[this.index]);
+          this.push('imagesActive', this.images[this.index+1]);
+        } else {
+          for (var i = 0, max = this.index; i <= max; i++) {
+            this.push('imagesActive', this.images[i]);
+          }
+          if (!this._isLastImage()) {
+            this.push('imagesActive', this.images[i]);
+          }
+          this.widthCarousel = (i+1)*100;
+        }
+        this._transitionToIndex(false);
+      },
+
+      _printImage: function(index) {
+        if (this.imagesActive[index] || !this._thereAreImagesNotActives()) {
+          return;
+        }
+        this.widthCarousel = (index+1)*100;
+        this.push('imagesActive', this.images[index]);
+      },
+
+      _indexChangedObserver: function(newIndex, oldIndex) {
+        if (!this.width) {
           return;
         }
 
-        this.index--;
-        var prevPoint = this.width*this.index;
-        this._changeItems(prevPoint);
-      },
-
-      _setImagesActive: function() {
-        if (this.index === 0) {
-          this.push('imagesActive', this.images[this.index]);
-          this.push('imagesActive', this.images[this.index+1]);
-        } else if (this._thereAreImagesNotActives() &&
-            this._isTheLastPosition()) {
-          //With each image the with should be 100% higher
-          //The increment of 2 (this.index+2) is because the gallety start with
-          //two images actives
-          this.widthCarousel = (this.index+2)*100;
-          this.push('imagesActive', this.images[this.index+1]);
+        var i = parseInt(oldIndex)+1;
+        var max = parseInt(newIndex)+1;
+        while (i <= max) {
+          this._printImage(i);
+          i++;
         }
+
+        this._transitionToIndex();
       },
 
-      _changeItems: function(goTo, transitionOn) {
+      _transitionToIndex: function() {
+        this.transitionOn = true;
         this.firstItem = this._isFirstImage();
         this.lastItem = this._isLastImage();
-        this.transitionOn = (transitionOn === false) ? false : true;
+        var goTo = this.width*(this.index);
+        this._transitionToLeftPosition(goTo);
+      },
+
+      _transitionToLeftPosition: function(goTo) {
         this.translate3d('-'+goTo+'px', '0', '0', this.$.carousel);
       },
 
@@ -235,7 +260,8 @@ Example:
 
             //if is the last image is disable the drag to right (next image)
             if (!this._isLastImage() || _percentageDisplacement > 0) {
-              this._changeItems(diff, false);
+              this.transitionOn = false;
+              this._transitionToLeftPosition(diff);
             }
             break;
           case 'end':
@@ -248,7 +274,7 @@ Example:
               this.prev();
             } else {
               //return tu actual position
-              this._changeItems(this.width*this.index);
+              this._transitionToIndex();
             }
             break;
         }

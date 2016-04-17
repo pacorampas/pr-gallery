@@ -15,12 +15,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <title>pr-gallery Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
     <link rel="import" href="../pr-gallery.html">
+    <link rel="import" href="../../pr-thumbnail/pr-thumbnail.html">
+    <link rel="import" href="../../pr-thumbnail-list/pr-thumbnail-list.html">
   </head>
   <body unresolved>
 
     <template id="app" is="dom-bind">
-      <pr-gallery id="gallery" images="{{images}}">
+      <div>Activo: {{active}}</div>
+      <pr-gallery id="gallery" images="{{images}}" index="{{active}}">
       </pr-gallery>
+      <pr-thumbnail-list active="{{active}}">
+        <template is="dom-repeat" items="{{images}}">
+          <pr-thumbnail image='{{item}}'>
+          </pr-thumbnail>
+        </template>
+      <pr-thumbnail-list>
     </template>
 
 
@@ -34,6 +43,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       {src: '../messi4.jpg'},
       {src: '../messi5.jpg'},
     ];
+
+    app.active = 1;
 
     // The dom-change event signifies when the template has stamped its DOM.
     app.addEventListener('dom-change', function() {
