@@ -9,20 +9,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../pr-gallery-button/pr-gallery-button.html">
+<link rel="import" href="./pr-gallery-button.html">
 
 <!--
-An element providing a solution to no problem in particular.
+An element to show an array of images in a gallery
 
 Example:
 
-    <pr-gallery></pr-gallery>
+    <pr-gallery images="{{arrayImages}}" index="{{indexActive}}"></pr-gallery>
 
-Example:
+- arrayImages should contain in each position an object as:
+{src: "path/to/img.png"}
 
-    <pr-gallery>
-      <h2>Hello pr-gallery</h2>
-    </pr-gallery>
+- index is the array position active at this time. If you change the index,
+the image is changed.
+
 
 @demo demo/index.html
 @hero hero.svg
@@ -66,6 +67,7 @@ Example:
         font-size: 0;
         overflow: hidden;
         padding: 10px;
+        cursor: pointer;
         box-sizing: border-box;
       }
 
@@ -137,14 +139,32 @@ Example:
       is: 'pr-gallery',
 
       properties: {
+        /**
+         * `images` images for showing in the gallery. Each item should be as:
+         * {src: 'path/to/img.jpg'}
+         *
+         * @type Array
+         */
         images: {
           type: Array,
           value: []
         },
+        /**
+         * `imagesActive` Images ready to show. Only the images active are
+         * downloaded by browser
+         *
+         * @type Array
+         */
         imagesActive: {
           type: Array,
           value: []
         },
+        /**
+         * `index` index to index is the array position active at this time.
+         * If you change the index, the image is changed.
+         *
+         * @type Number
+         */
         index: {
           type: Number,
           value: 0,
@@ -152,21 +172,46 @@ Example:
           reflectToAttribute: true,
           observer: '_indexChangedObserver'
         },
+        /**
+         * `widht` in px of the gallery
+         *
+         * @type Number
+         */
         width: {
           type: Number
         },
+        /**
+         * `widhtCarousel` sum of the width of all active images
+         *
+         * @type Number
+         */
         widthCarousel: {
           type: Number
         },
+        /**
+         * `transitionOn` flag to animate or not the transition
+         *
+         * @type Boolean
+         */
         transitionOn: {
           type: Boolean,
           value: false,
           reflectToAttribute: true
         },
+        /**
+         * `firstImage` flag active when is active the first image
+         *
+         * @type Boolean
+         */
         firstItem: {
           type: Boolean,
           value: false
         },
+        /**
+         * `lastImage` flag active when is active the last image
+         *
+         * @type Boolean
+         */
         lastItem: {
           type: Boolean,
           value: false
@@ -185,13 +230,20 @@ Example:
         this._init();
       },
 
+      /**
+       * Method for going to previous image
+       *
+       */
       prev: function() {
         if (this._isFirstImage()) {
           return;
         }
         this.index--;
       },
-
+      /**
+       * Method for going to next image
+       *
+       */
       next: function() {
         if (this._isLastImage()) {
           return;

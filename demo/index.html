@@ -32,35 +32,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <pr-thumbnail-list>
     </template>
 
-
     <script>
+      var app = document.querySelector('#app');
+      app.images = [
+        {src: '../messi.jpg'},
+        {src: '../messi2.jpg'},
+        {src: '../messi3.jpg'},
+        {src: '../messi4.jpg'},
+        {src: '../messi5.jpg'},
+      ];
 
-    var app = document.querySelector('#app');
-    app.images = [
-      {src: '../messi.jpg'},
-      {src: '../messi2.jpg'},
-      {src: '../messi3.jpg'},
-      {src: '../messi4.jpg'},
-      {src: '../messi5.jpg'},
-    ];
-
-    app.active = 1;
-
-    // The dom-change event signifies when the template has stamped its DOM.
-    app.addEventListener('dom-change', function() {
-      console.log('Comenzar');
-      /*setTimeout(function() {
-        app.push('images', {src: '../messi4.jpg'})
-      }, 4000);*/
-    });
-
-    // auto-binding template is ready.
-
-    /*app.gallery.addImages([
-      {src: '../messi4.jpg'}, {src: '../messi5.jpg'}
-    ]);*/
-
+      app.active = 1;
     </script>
-
   </body>
 </html>
