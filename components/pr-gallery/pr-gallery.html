@@ -1,0 +1,352 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="./pr-gallery-button.html">
+
+<!--
+An element to show an array of images in a gallery
+
+Example:
+
+    <pr-gallery images="{{arrayImages}}" index="{{indexActive}}"></pr-gallery>
+
+- arrayImages should contain in each position an object as:
+{src: "path/to/img.png"}
+
+- index is the array position active at this time. If you change the index,
+the image is changed.
+
+
+@demo demo/index.html
+@hero hero.svg
+-->
+
+<dom-module id="pr-gallery">
+  <template>
+    <style>
+      :host {
+        display: block;
+        box-sizing: border-box;
+      }
+
+      div#wpCarousel {
+        position: relative;
+        overflow: hidden;
+      }
+
+      ul#carousel {
+        width: 300%;
+        margin: 0;
+        padding: 0;
+        list-style-type:none;
+        white-space:nowrap;
+        overflow-x: auto;
+        font-size: 0;
+        background: #333;
+      }
+
+      :host[transition-on] ul#carousel {
+        transition: transform 0.2s;
+      }
+
+      li {
+        float: left;
+        position: relative;
+        height: 400px;
+        width: 100%;
+        display: inline-block;
+        text-align: center;
+        font-size: 0;
+        overflow: hidden;
+        padding: 10px;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
+
+      li:before {
+        content: "";
+        margin-left: -1px;
+        width: 1px;
+        height: 100%;
+        display: inline-block;
+        vertical-align: middle;
+        opacity: 0;
+      }
+
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        display: inline-block;
+        pointer-events: none;
+        vertical-align: middle;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #buttonPrev,
+      #buttonNext {
+        position: absolute;
+        top: 50%;
+        margin-top: -20px;
+      }
+
+      #buttonPrev {
+        left: 10px;
+      }
+      #buttonNext {
+        right: 10px;
+      }
+    </style>
+    <div id="wpCarousel" class$="first-item-{{firstItem}} first-item-{{lastItem}}">
+      <ul id="carousel" on-track="_handleTrack" style="width: {{widthCarousel}}%">
+        <template
+            id="images"
+            is="dom-repeat"
+            items="{{imagesActive}}"
+            initial-count="1">
+          <li style="width: {{width}}px">
+            <img id="item-{{index}}" src="{{item.src}}">
+          </li>
+        </template>
+      </ul>
+      <pr-gallery-button
+          id="buttonPrev"
+          on-tap="prev"
+          disabled="{{firstItem}}">
+        Prev
+      </pr-gallery-button>
+      <pr-gallery-button
+          id="buttonNext"
+          on-tap="next"
+          disabled="{{lastItem}}">
+        Next
+      </pr-gallery-button>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'pr-gallery',
+
+      properties: {
+        /**
+         * `images` images for showing in the gallery. Each item should be as:
+         * {src: 'path/to/img.jpg'}
+         *
+         * @type Array
+         */
+        images: {
+          type: Array,
+          value: []
+        },
+        /**
+         * `imagesActive` Images ready to show. Only the images active are
+         * downloaded by browser
+         *
+         * @type Array
+         */
+        imagesActive: {
+          type: Array,
+          value: []
+        },
+        /**
+         * `index` index to index is the array position active at this time.
+         * If you change the index, the image is changed.
+         *
+         * @type Number
+         */
+        index: {
+          type: Number,
+          value: 0,
+          notify: true,
+          reflectToAttribute: true,
+          observer: '_indexChangedObserver'
+        },
+        /**
+         * `widht` in px of the gallery
+         *
+         * @type Number
+         */
+        width: {
+          type: Number
+        },
+        /**
+         * `widhtCarousel` sum of the width of all active images
+         *
+         * @type Number
+         */
+        widthCarousel: {
+          type: Number
+        },
+        /**
+         * `transitionOn` flag to animate or not the transition
+         *
+         * @type Boolean
+         */
+        transitionOn: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true
+        },
+        /**
+         * `firstImage` flag active when is active the first image
+         *
+         * @type Boolean
+         */
+        firstItem: {
+          type: Boolean,
+          value: false
+        },
+        /**
+         * `lastImage` flag active when is active the last image
+         *
+         * @type Boolean
+         */
+        lastItem: {
+          type: Boolean,
+          value: false
+        }
+      },
+
+      _percentajeDisplacement: 0,
+
+      ready: function() {
+        this.firstItem = this._isFirstImage();
+        this.lastItem = this._isLastImage();
+      },
+
+      attached: function() {
+        this.width = this.$.wpCarousel.offsetWidth;
+        this._init();
+      },
+
+      /**
+       * Method for going to previous image
+       *
+       */
+      prev: function() {
+        if (this._isFirstImage()) {
+          return;
+        }
+        this.index--;
+      },
+      /**
+       * Method for going to next image
+       *
+       */
+      next: function() {
+        if (this._isLastImage()) {
+          return;
+        }
+        this.index++;
+      },
+
+      _init: function() {
+        if (this._isFirstImage()) {
+          this.push('imagesActive', this.images[this.index]);
+          this.push('imagesActive', this.images[this.index+1]);
+        } else {
+          for (var i = 0, max = this.index; i <= max; i++) {
+            this.push('imagesActive', this.images[i]);
+          }
+          if (!this._isLastImage()) {
+            this.push('imagesActive', this.images[i]);
+          }
+          this.widthCarousel = (i+1)*100;
+        }
+        this._transitionToIndex(false);
+      },
+
+      _printImage: function(index) {
+        if (this.imagesActive[index] || !this._thereAreImagesNotActives()) {
+          return;
+        }
+        this.widthCarousel = (index+1)*100;
+        this.push('imagesActive', this.images[index]);
+      },
+
+      _indexChangedObserver: function(newIndex, oldIndex) {
+        if (!this.width) {
+          return;
+        }
+
+        var i = parseInt(oldIndex)+1;
+        var max = parseInt(newIndex)+1;
+        while (i <= max) {
+          this._printImage(i);
+          i++;
+        }
+
+        this._transitionToIndex();
+      },
+
+      _transitionToIndex: function() {
+        this.transitionOn = true;
+        this.firstItem = this._isFirstImage();
+        this.lastItem = this._isLastImage();
+        var goTo = this.width*(this.index);
+        this._transitionToLeftPosition(goTo);
+      },
+
+      _transitionToLeftPosition: function(goTo) {
+        this.translate3d('-'+goTo+'px', '0', '0', this.$.carousel);
+      },
+
+      _handleTrack: function(e) {
+        switch(e.detail.state) {
+          case 'track':
+            var displacement = e.detail.dx;
+            var actualPosition = this.width*this.index;
+            var diff = actualPosition-displacement;
+            _percentageDisplacement = displacement*100/this.width;
+
+            //if is the last image is disable the drag to right (next image)
+            if (!this._isLastImage() || _percentageDisplacement > 0) {
+              this.transitionOn = false;
+              this._transitionToLeftPosition(diff);
+            }
+            break;
+          case 'end':
+            //_percentajeDisplacement negative are to right or next image
+            //_percentajeDisplacement positive are to left or prev image
+            if (_percentageDisplacement < -15 && !this._isLastImage()) {
+              this.next();
+            } else if (_percentageDisplacement > 15
+                && !this._isFirstImage()) {
+              this.prev();
+            } else {
+              //return tu actual position
+              this._transitionToIndex();
+            }
+            break;
+        }
+      },
+
+      _isLastImage: function() {
+        return this.index >= this.images.length-1;
+      },
+
+      _isFirstImage: function() {
+        return this.index <= 0;
+      },
+
+      _thereAreImagesNotActives: function() {
+        return this.images.length > this.imagesActive.length;
+      },
+
+      _isTheLastPosition: function() {
+        return this.index === this.imagesActive.length-1;
+      }
+    });
+  </script>
+</dom-module>
